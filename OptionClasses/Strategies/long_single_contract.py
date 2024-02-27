@@ -149,6 +149,34 @@ class LongSingleContractStrategy:
 
         return pd.DataFrame(simulation_data)
 
+    @staticmethod
+    def get_meta_data(df: pd.DataFrame) -> pd.DataFrame:
+        meta_data = {
+            'Average Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).mean(),
+            'Average Strategy Profit (Dollars)': df['strategy_profit_dollars'].astype(float).mean(),
+            'Standard Deviation of Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).std(),
+            'Win Rate': (df['strategy_profit_dollars'].astype(float) > 0).mean(),
+            'Average Contract Change (Dollars)': df['contract_change_dollars'].astype(float).mean(),
+            'Average Contract Change (Percent)': df['contract_change_percent'].astype(float).mean(),
+            'Standard Deviation of Contract Change (Percent)': df['contract_change_percent'].astype(float).std(),
+            # Additional metrics
+            'Maximum Strategy Profit (Dollars)': df['strategy_profit_dollars'].astype(float).max(),
+            'Minimum Strategy Profit (Dollars)': df['strategy_profit_dollars'].astype(float).min(),
+            'Maximum Drawdown (Dollars)': df['strategy_profit_dollars'].astype(float).max() - df[
+                'strategy_profit_dollars'].astype(float).min(),
+            'Number of Trades': len(df),
+            'Gap-Filled Trades': ((df['entry_runs'] == 0) | (df['exit_runs'] == 0)).sum(),
+            'Profit Factor': df[df['strategy_profit_dollars'].astype(float) > 0]['strategy_profit_dollars'].astype(
+                float).sum() / abs(
+                df[df['strategy_profit_dollars'].astype(float) < 0]['strategy_profit_dollars'].astype(float).sum()),
+            'Sharpe Ratio': df['strategy_profit_percent'].astype(float).mean() / df['strategy_profit_percent'].astype(
+                float).std(),
+            'Average Holding Period (Minutes)': ((pd.to_datetime(df['exit_time'], unit='ms') - pd.to_datetime(
+                df['entry_time'], unit='ms')).dt.total_seconds() / 60).mean(),
+        }
+
+        return pd.DataFrame(meta_data.items(), columns=['Metric', 'Value'])
+
 
 test = LongSingleContractStrategy(ticker='aapl',
                                   strike=180,
@@ -164,4 +192,4 @@ test = LongSingleContractStrategy(ticker='aapl',
                                   multiplier=1
                                   )
 
-print(test.run_simulation())
+print(LongSingleContractStrategy.get_meta_data(test.run_simulation()))
