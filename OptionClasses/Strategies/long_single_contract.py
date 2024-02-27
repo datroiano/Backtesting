@@ -86,22 +86,82 @@ class LongSingleContractStrategy:
 
         return pd.DataFrame(filled_data, columns=self.contract_data.columns)
 
-    def run_simulation(self) -> pd.DataFrame:
-        pass
+    def run_simulation(self):
+        simulation_data = []
+        entry_start_time = datetime.strptime(f'{self.entry_date} {self.entry_exit_period[0]}',
+                                             '%Y-%m-%d %H:%M:%S').timestamp() * 1000
+        entry_end_time = datetime.strptime(f'{self.entry_date} {self.entry_exit_period[1]}',
+                                           '%Y-%m-%d %H:%M:%S').timestamp() * 1000
+        exit_start_time = datetime.strptime(f'{self.exit_date} {self.entry_exit_period[2]}',
+                                            '%Y-%m-%d %H:%M:%S').timestamp() * 1000
+        exit_end_time = datetime.strptime(f'{self.exit_date} {self.entry_exit_period[3]}',
+                                          '%Y-%m-%d %H:%M:%S').timestamp() * 1000
+
+        entry_points = self.contract_data[
+            (self.contract_data['t'] >= entry_start_time) & (self.contract_data['t'] <= entry_end_time)].to_dict(
+            'records')
+        exit_points = self.contract_data[
+            (self.contract_data['t'] >= exit_start_time) & (self.contract_data['t'] <= exit_end_time)].to_dict(
+            'records')
+
+        for entry_point in entry_points:
+            entry_time = entry_point['t']
+            entry_contract_price = entry_point[self.pricing_criteria]  # CAN TINKER WITH AVERAGES HERE
+            entry_strategy_price = entry_contract_price * self.quantity
+            entry_volume = entry_point['v']
+            entry_volume_weighted = entry_point['vw']
+            entry_runs = entry_point['n']
+
+            for exit_point in exit_points:
+                exit_time = exit_point['t']
+                exit_contract_price = exit_point[self.pricing_criteria]  # CAN TINKER WITH AVERAGES HERE
+                exit_strategy_price = exit_contract_price * self.quantity
+                exit_volume = exit_point['v']
+                exit_volume_weighted = exit_point['vw']
+                exit_runs = exit_point['n']
+
+                contract_change_dollars = exit_contract_price - entry_contract_price
+                contract_change_percent = contract_change_dollars / entry_contract_price
+                commission_paid = self.quantity * self.per_contract_commission
+                strategy_profit_dollars = exit_strategy_price - entry_strategy_price - (2 * commission_paid)
+                strategy_profit_percent = strategy_profit_dollars / entry_strategy_price
+
+                simulated_trade = {
+                    'entry_time': entry_time,
+                    'entry_contract_price': entry_contract_price,
+                    'entry_strategy_price': entry_strategy_price,
+                    'entry_volume': entry_volume,
+                    'entry_volume_weighted': entry_volume_weighted,
+                    'entry_runs': entry_runs,
+                    'exit_time': exit_time,
+                    'exit_contract_price': exit_contract_price,
+                    'exit_strategy_price': exit_strategy_price,
+                    'exit_volume': exit_volume,
+                    'exit_volume_weighted': exit_volume_weighted,
+                    'exit_runs': exit_runs,
+                    'contract_change_dollars': f'{contract_change_dollars:.2f}',
+                    'contract_change_percent': f'{contract_change_percent:.2f}',
+                    'strategy_profit_dollars': f'{strategy_profit_dollars:.2f}',
+                    'strategy_profit_percent': f'{strategy_profit_percent:.2f}'
+                }
+
+                simulation_data.append(simulated_trade)
+
+        return pd.DataFrame(simulation_data)
 
 
-# test = LongSingleContractStrategy(ticker='aapl',
-#                                   strike=180,
-#                                   expiration_date='2024-03-01',
-#                                   quantity=1,
-#                                   entry_date='2024-02-22',
-#                                   exit_date='2024-02-22',
-#                                   entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
-#                                   timespan='minute',
-#                                   is_call=True,
-#                                   fill_gaps=True,
-#                                   per_contract_commission=0.01,
-#                                   multiplier=1
-#                                   )
-#
-# print(test.contract_data)
+test = LongSingleContractStrategy(ticker='aapl',
+                                  strike=180,
+                                  expiration_date='2024-03-01',
+                                  quantity=1,
+                                  entry_date='2024-02-22',
+                                  exit_date='2024-02-22',
+                                  entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
+                                  timespan='minute',
+                                  is_call=True,
+                                  fill_gaps=True,
+                                  per_contract_commission=0.01,
+                                  multiplier=1
+                                  )
+
+print(test.run_simulation())
