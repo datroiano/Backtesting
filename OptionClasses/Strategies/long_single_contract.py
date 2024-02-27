@@ -177,19 +177,20 @@ class LongSingleContractStrategy:
 
         return pd.DataFrame(meta_data.items(), columns=['Metric', 'Value'])
 
-
-test = LongSingleContractStrategy(ticker='aapl',
-                                  strike=180,
-                                  expiration_date='2024-03-01',
-                                  quantity=1,
-                                  entry_date='2024-02-22',
-                                  exit_date='2024-02-22',
-                                  entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
-                                  timespan='minute',
-                                  is_call=True,
-                                  fill_gaps=True,
-                                  per_contract_commission=0.01,
-                                  multiplier=1
-                                  )
-
-print(LongSingleContractStrategy.get_meta_data(test.run_simulation()))
+#
+# test = LongSingleContractStrategy(ticker='aapl',
+#                                   strike=180,
+#                                   expiration_date='2024-03-01',
+#                                   quantity=1,
+#                                   entry_date='2024-02-22',
+#                                   exit_date='2024-02-22',
+#                                   entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
+#                                   timespan='minute',
+#                                   is_call=True,
+#                                   fill_gaps=True,
+#                                   per_contract_commission=0.01,
+#                                   multiplier=1,
+#                                   polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
+#                                   )
+#
+# print(test.run_simulation().columns)
