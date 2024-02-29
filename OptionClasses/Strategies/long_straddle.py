@@ -1,8 +1,8 @@
-from OptionClasses.Strategies.long_single_contract import LongSingleContractStrategy
+from OptionClasses.Strategies.long_single_contract import SingleContractStrategy
 import pandas as pd
 
 
-class LongStraddleStrategy:
+class StraddleStrategy:
     def __init__(self,
                  ticker: str,
                  strike: int or float,
@@ -11,6 +11,7 @@ class LongStraddleStrategy:
                  entry_date: str,
                  exit_date: str,
                  entry_exit_period: tuple,
+                 strategy_type: str = 'long',
                  fill_gaps: bool = True,
                  timespan: str = 'minute',
                  per_contract_commission: float = 0.00,
@@ -21,6 +22,7 @@ class LongStraddleStrategy:
                  ) -> None:
         """
         Shared expiration, strike, ticker, and quantity in this class
+        Can be either short or long
         """
         self.ticker = ticker.upper()
         self.strike = float(strike)
@@ -35,8 +37,9 @@ class LongStraddleStrategy:
         self.per_contract_commission = per_contract_commission
         self.quantity = quantity
         self.pricing_criteria = pricing_criteria
+        self.strategy_type = strategy_type.upper()
 
-        self.contract_1 = LongSingleContractStrategy(
+        self.contract_1 = SingleContractStrategy(
             ticker=self.ticker,
             strike=self.strike,
             expiration_date=self.expiration_date,
@@ -45,6 +48,7 @@ class LongStraddleStrategy:
             exit_date=self.exit_date,
             entry_exit_period=self.entry_exit_period,
             timespan=self.timespan,
+            strategy_type=self.strategy_type,
             is_call=True,
             fill_gaps=fill_gaps,
             per_contract_commission=self.per_contract_commission,
@@ -52,7 +56,7 @@ class LongStraddleStrategy:
             polygon_api_key=self.polygon_api_key
         )
 
-        self.contract_2 = LongSingleContractStrategy(
+        self.contract_2 = SingleContractStrategy(
             ticker=self.ticker,
             strike=self.strike,
             expiration_date=self.expiration_date,
@@ -61,6 +65,7 @@ class LongStraddleStrategy:
             exit_date=self.exit_date,
             entry_exit_period=self.entry_exit_period,
             timespan=self.timespan,
+            strategy_type=self.strategy_type,
             is_call=False,
             fill_gaps=fill_gaps,
             per_contract_commission=self.per_contract_commission,
@@ -72,53 +77,54 @@ class LongStraddleStrategy:
         contract_1_trades = self.contract_1.run_simulation()
         contract_2_trades = self.contract_2.run_simulation()
 
-        merged_df = pd.merge(contract_1_trades, contract_2_trades,
-                             on=['entry_time', 'exit_time'])
+        merged_df = pd.merge(contract_1_trades, contract_2_trades, on=['entry_time', 'exit_time'])
 
-        merged_df['combined_profit_dollars'] = pd.to_numeric(merged_df['strategy_profit_dollars_x']) + pd.to_numeric(
-            merged_df[
-                'strategy_profit_dollars_y'])
-        merged_df['combined_profit_percent'] = pd.to_numeric(merged_df['strategy_profit_percent_x']) + pd.to_numeric(
-            merged_df[
-                'strategy_profit_percent_y'])
-        merged_df['contract_change_dollars'] = pd.to_numeric(merged_df['contract_change_dollars_x']) + pd.to_numeric(
-            merged_df[
-                'contract_change_dollars_y'])
-        merged_df['contract_change_percent'] = pd.to_numeric(merged_df['contract_change_percent_x']) + pd.to_numeric(
-            merged_df[
-                'contract_change_percent_y'])
+        is_long = self.strategy_type == 'LONG'
 
-        merged_df.drop(['strategy_profit_dollars_x', 'strategy_profit_dollars_y',
-                        'strategy_profit_percent_x', 'strategy_profit_percent_y',
-                        'contract_change_dollars_x', 'contract_change_dollars_y',
-                        'contract_change_percent_x','contract_change_percent_y'], axis=1, inplace=True)
+        one_way_commission = self.quantity * self.per_contract_commission
+        contract_change = (pd.to_numeric(merged_df['exit_contract_price_x']) + pd.to_numeric(
+            merged_df['exit_contract_price_y']) -
+                           pd.to_numeric(merged_df['entry_contract_price_x']) - pd.to_numeric(
+                    merged_df['entry_contract_price_y']))
+        dollars_profit = (contract_change if is_long else -contract_change) - (one_way_commission * 2)
+        entry_value_less_commission = (pd.to_numeric(merged_df['entry_contract_price_x']) + pd.to_numeric(
+            merged_df['entry_contract_price_y']))
+
+        merged_df['strategy_profit_dollars'] = dollars_profit
+        merged_df['strategy_profit_percent'] = dollars_profit / (
+                    entry_value_less_commission - one_way_commission * 2 + 1e-8)  # Add a small value to avoid division by zero
+        merged_df['contract_change_dollars'] = contract_change
+        merged_df['contract_change_percent'] = contract_change / (
+                    entry_value_less_commission + 1e-8)  # Add a small value to avoid division by zero
+
+        merged_df.drop(['exit_contract_price_x', 'exit_contract_price_y',
+                        'entry_contract_price_x', 'entry_contract_price_y'], axis=1, inplace=True)
 
         merged_df.rename(columns={'ticker_x': 'ticker'}, inplace=True)
 
         return merged_df
 
-
     @staticmethod
     def get_meta_data(df: pd.DataFrame) -> pd.DataFrame:
         meta_data = {
-            'Average Strategy Profit (Percent)': df['combined_profit_percent'].astype(float).mean(),
-            'Average Strategy Profit (Dollars)': df['combined_profit_dollars'].astype(float).mean(),
-            'Standard Deviation of Strategy Profit (Percent)': df['combined_profit_percent'].astype(float).std(),
-            'Win Rate': (df['combined_profit_dollars'].astype(float) > 0).mean(),
+            'Average Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).mean(),
+            'Average Strategy Profit (Dollars)': df['strategy_profit_dollars'].astype(float).mean(),
+            'Standard Deviation of Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).std(),
+            'Win Rate': (df['strategy_profit_dollars'].astype(float) > 0).mean(),
             'Average Contract Change (Dollars)': df['contract_change_dollars'].astype(float).mean(),
             'Average Contract Change (Percent)': df['contract_change_percent'].astype(float).mean(),
             'Standard Deviation of Contract Change (Percent)': df['contract_change_percent'].astype(float).std(),
-            'Maximum Strategy Profit (Dollars)': df['combined_profit_dollars'].astype(float).max(),
-            'Minimum Strategy Profit (Dollars)': df['combined_profit_dollars'].astype(float).min(),
-            'Maximum Drawdown (Dollars)': df['combined_profit_dollars'].astype(float).max() - df[
-                'combined_profit_dollars'].astype(float).min(),
+            'Maximum Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).max(),
+            'Minimum Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).min(),
+            'Maximum Drawdown (Dollars)': df['strategy_profit_dollars'].astype(float).max() - df[
+                'strategy_profit_dollars'].astype(float).min(),
             'Number of Trades': len(df),
             'Gap-Filled Trades': ((df['entry_runs_x'] == 0) | (df['exit_runs_x'] == 0) |
                                   (df['entry_runs_y'] == 0) | (df['exit_runs_y'] == 0)).sum(),
-            'Profit Factor': df[df['combined_profit_dollars'].astype(float) > 0]['combined_profit_dollars'].astype(
+            'Profit Factor': df[df['strategy_profit_dollars'].astype(float) > 0]['strategy_profit_dollars'].astype(
                 float).sum() / abs(
-                df[df['combined_profit_dollars'].astype(float) < 0]['combined_profit_dollars'].astype(float).sum()),
-            'Sharpe Ratio': df['combined_profit_percent'].astype(float).mean() / df['combined_profit_percent'].astype(
+                df[df['strategy_profit_dollars'].astype(float) < 0]['strategy_profit_dollars'].astype(float).sum()),
+            'Sharpe Ratio': df['strategy_profit_percent'].astype(float).mean() / df['strategy_profit_percent'].astype(
                 float).std(),
             'Average Holding Period (Minutes)': ((pd.to_datetime(df['exit_time'], unit='ms') - pd.to_datetime(
                 df['entry_time'], unit='ms')).dt.total_seconds() / 60).mean(),
@@ -127,17 +133,19 @@ class LongStraddleStrategy:
         return pd.DataFrame(meta_data.items(), columns=['Metric', 'Value'])
 
 
-test = LongStraddleStrategy(ticker='aapl',
-                            strike=185,
-                            expiration_date='2024-03-01',
-                            quantity=1,
-                            entry_date='2024-02-22',
-                            exit_date='2024-02-22',
-                            entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
-                            timespan='minute',
-                            fill_gaps=True,
-                            per_contract_commission=0.01,
-                            multiplier=1,
-                            polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
-                            )
-print(LongStraddleStrategy.get_meta_data(test.run_simulation()))
+# test = StraddleStrategy(ticker='nvda',
+#                         strike=790,
+#                         expiration_date='2024-03-01',
+#                         quantity=1,
+#                         entry_date='2024-02-28',
+#                         exit_date='2024-02-28',
+#                         strategy_type='long',
+#                         entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
+#                         timespan='minute',
+#                         fill_gaps=True,
+#                         per_contract_commission=0.01,
+#                         multiplier=1,
+#                         polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
+#                         )
+#
+# print(test.run_simulation().columns)
