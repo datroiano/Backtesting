@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta, time
 
 
-class LongSingleContractStrategy:
+class SingleContractStrategy:
     def __init__(self,
                  ticker: str,
                  strike: int or float,
@@ -13,6 +13,7 @@ class LongSingleContractStrategy:
                  exit_date: str,
                  is_call: bool,
                  entry_exit_period: tuple,
+                 strategy_type: str = 'long',
                  fill_gaps: bool = True,
                  timespan: str = 'minute',
                  per_contract_commission: float = 0.00,
@@ -36,6 +37,7 @@ class LongSingleContractStrategy:
         self.per_contract_commission = per_contract_commission
         self.quantity = quantity
         self.pricing_criteria = pricing_criteria
+        self.strategy_type = False if strategy_type.upper() == 'SHORT' else True
 
         contract = SingleOptionsContract(ticker=self.ticker, strike=self.strike, expiration_date=self.expiration_date,
                                          is_call=self.is_call)
@@ -86,7 +88,7 @@ class LongSingleContractStrategy:
 
         return pd.DataFrame(filled_data, columns=self.contract_data.columns)
 
-    def run_simulation(self):
+    def run_simulation(self) -> pd.DataFrame or None:
         simulation_data = []
         entry_start_time = datetime.strptime(f'{self.entry_date} {self.entry_exit_period[0]}',
                                              '%Y-%m-%d %H:%M:%S').timestamp() * 1000
@@ -120,10 +122,17 @@ class LongSingleContractStrategy:
                 exit_volume_weighted = exit_point['vw']
                 exit_runs = exit_point['n']
 
+                commission_paid = self.quantity * self.per_contract_commission
                 contract_change_dollars = exit_contract_price - entry_contract_price
                 contract_change_percent = contract_change_dollars / entry_contract_price
-                commission_paid = self.quantity * self.per_contract_commission
-                strategy_profit_dollars = exit_strategy_price - entry_strategy_price - (2 * commission_paid)
+
+                if self.strategy_type:
+                    strategy_profit_dollars = exit_strategy_price - entry_strategy_price - (2 * commission_paid)
+                elif not self.strategy_type:
+                    strategy_profit_dollars = entry_strategy_price - exit_strategy_price - (2 * commission_paid)
+                else:
+                    return None
+
                 strategy_profit_percent = strategy_profit_dollars / entry_strategy_price
 
                 simulated_trade = {
@@ -177,20 +186,19 @@ class LongSingleContractStrategy:
 
         return pd.DataFrame(meta_data.items(), columns=['Metric', 'Value'])
 
-#
-# test = LongSingleContractStrategy(ticker='aapl',
-#                                   strike=180,
-#                                   expiration_date='2024-03-01',
-#                                   quantity=1,
-#                                   entry_date='2024-02-22',
-#                                   exit_date='2024-02-22',
-#                                   entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
-#                                   timespan='minute',
-#                                   is_call=True,
-#                                   fill_gaps=True,
-#                                   per_contract_commission=0.01,
-#                                   multiplier=1,
-#                                   polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
-#                                   )
-#
-# print(test.run_simulation().columns)
+# test = SingleContractStrategy(ticker='nvda',
+#                         strike=790,
+#                         expiration_date='2024-03-01',
+#                         quantity=1,
+#                         entry_date='2024-02-28',
+#                               is_call=True,
+#                         exit_date='2024-02-28',
+#                         strategy_type='short',
+#                         entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
+#                         timespan='minute',
+#                         fill_gaps=True,
+#                         per_contract_commission=0.01,
+#                         multiplier=1,
+#                         polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
+#                         )
+# print(SingleContractStrategy.get_meta_data(test.run_simulation()))
