@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
-from OptionClasses.Strategies.long_straddle import StraddleStrategy
+from OptionClasses.Strategies.straddle import StraddleStrategy
 from UseFunctions.date_time import from_unix_time, to_unix_time
 
 
