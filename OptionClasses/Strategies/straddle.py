@@ -100,19 +100,25 @@ class StraddleStrategy:
         merged_df['stock_price_change_percent'] = merged_df['stock_price_change_percent_x']
 
         merged_df['strategy_profit_dollars'] = dollars_profit
-        merged_df['strategy_profit_percent'] = dollars_profit / (
-                    entry_value_less_commission - one_way_commission * 2 + 1e-8)  # Avoids ZeroDivision
+        merged_df['strategy_profit_percent'] = abs(dollars_profit / (
+                    entry_value_less_commission - one_way_commission * 2 + 1e-8))  # Avoids ZeroDivision
         merged_df['contract_change_dollars'] = contract_change
         merged_df['contract_change_percent'] = contract_change / (
                     entry_value_less_commission + 1e-8)  # Add a small value to avoid division by zero
 
         merged_df.drop(['exit_contract_price_x', 'exit_contract_price_y', 'entry_contract_price_x',
                         'entry_contract_price_y', 'entry_stock_price_x', 'entry_stock_price_y',
-                        'entry_stock_volume_weighted_x', 'entry_stock_volume_weighted_y', 'exit_stock_volume_weigthed_x',
+                        'entry_stock_volume_weighted_x', 'entry_stock_volume_weighted_y',
+                        'exit_stock_volume_weigthed_x', 'entry_strategy_price_x', 'exit_strategy_price_x',
+                        'contract_change_dollars_x', 'contract_change_percent_x', 'strategy_profit_dollars_x',
+                        'strategy_profit_percent_x', 'entry_strategy_price_y', 'exit_strategy_price_y',
+                        'contract_change_dollars_y', 'contract_change_percent_y', 'strategy_profit_dollars_y',
+                        'strategy_profit_percent_y', 'stock_price_change_dollars', 'strategy_profit_dollars',
+                        'contract_change_dollars', 'contract_change_percent',
                         'stock_price_change_dollars_x', 'stock_price_change_percent_x', 'exit_stock_volume_weigthed_y',
-                        'stock_price_change_dollars_y', 'stock_price_change_percent_y',
+                        'stock_price_change_dollars_y', 'stock_price_change_percent_y', 'entry_stock_price', 'exit_stock_price',
                         'entry_stock_volume_x', 'entry_stock_volume_y',  'exit_stock_price_x', 'exit_stock_price_y',
-                        'exit_stock_volume_x', 'exit_stock_volume_y',], axis=1, inplace=True)
+                        'exit_stock_volume_x', 'exit_stock_volume_y'], axis=1, inplace=True)
 
         merged_df.rename(columns={'ticker_x': 'ticker'}, inplace=True)
 
@@ -165,5 +171,6 @@ test = StraddleStrategy(ticker='aapl',
                         )
 
 
-# print(test.run_simulation())
-print(StraddleStrategy.get_meta_data(test.run_simulation()))
+# print(test.run_simulation().columns)
+# print(StraddleStrategy.get_meta_data(test.run_simulation()))
+# print(make_df_input(test.run_simulation()))

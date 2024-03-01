@@ -29,3 +29,13 @@ def save_df_to_excel(df: pd.DataFrame, file_name: str = 'data.xlsx') -> None:
                 worksheet.set_column(i, i, max_width)
     except PermissionError:
         print("Permission Error. Check file status.")
+
+
+def print_column_values(dataframe, column_key):
+    if column_key not in dataframe.columns:
+        print(f"Column '{column_key}' not found in the dataframe.")
+        return
+    column_values = dataframe[column_key].tolist()
+    print(f"Values for column '{column_key}':")
+    for value in column_values:
+        print(value)
