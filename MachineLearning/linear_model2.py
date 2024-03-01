@@ -10,7 +10,8 @@ from UseFunctions.date_time import to_unix_time
 
 
 def apply_predictive_model(data):
-    x = data.drop(columns=['strategy_profit_percent'])
+    x = data.drop(columns=['strategy_profit_percent', 'strategy_profit_dollars', 'contract_change_dollars',
+                           'contract_change_percent'])
     y = data['strategy_profit_percent']
     feature_names = x.columns  # Get feature names
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.35, random_state=42)
@@ -21,22 +22,68 @@ def apply_predictive_model(data):
     return mse, model, feature_names
 
 
-test = StraddleStrategy(ticker='bud',
-                        strike=62,
-                        expiration_date='2024-03-01',
-                        quantity=5,
-                        entry_date='2024-02-28',
-                        exit_date='2024-02-28',
-                        strategy_type='long',
-                        entry_exit_period=('10:30:00', '11:30:00', '14:30:00', '16:00:00'),
-                        timespan='minute',
-                        fill_gaps=True,
-                        per_contract_commission=0.01,
-                        multiplier=1,
-                        polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
-                        ).run_simulation()
+test1 = StraddleStrategy(ticker='aapl',
+                         strike=185,
+                         expiration_date='2024-03-01',
+                         quantity=5,
+                         entry_date='2024-02-28',
+                         exit_date='2024-02-28',
+                         strategy_type='long',
+                         entry_exit_period=('10:30:00', '11:30:00', '14:30:00', '16:00:00'),
+                         timespan='minute',
+                         fill_gaps=True,
+                         per_contract_commission=0.01,
+                         multiplier=1,
+                         polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
+                         ).run_simulation()
 
-model = apply_predictive_model(test)
+test2 = StraddleStrategy(ticker='nvda',
+                         strike=790,
+                         expiration_date='2024-03-01',
+                         quantity=5,
+                         entry_date='2024-02-26',
+                         exit_date='2024-02-26',
+                         strategy_type='long',
+                         entry_exit_period=('10:30:00', '11:30:00', '14:30:00', '16:00:00'),
+                         timespan='minute',
+                         fill_gaps=True,
+                         per_contract_commission=0.01,
+                         multiplier=1,
+                         polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
+                         ).run_simulation()
+
+test3 = StraddleStrategy(ticker='adbe',
+                         strike=565,
+                         expiration_date='2024-03-01',
+                         quantity=5,
+                         entry_date='2024-02-27',
+                         exit_date='2024-02-27',
+                         strategy_type='long',
+                         entry_exit_period=('10:30:00', '11:30:00', '14:30:00', '16:00:00'),
+                         timespan='minute',
+                         fill_gaps=True,
+                         per_contract_commission=0.01,
+                         multiplier=1,
+                         polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
+                         ).run_simulation()
+
+test4 = StraddleStrategy(ticker='aapl',
+                         strike=185,
+                         expiration_date='2024-03-08',
+                         quantity=5,
+                         entry_date='2024-02-26',
+                         exit_date='2024-02-26',
+                         strategy_type='long',
+                         entry_exit_period=('10:30:00', '11:30:00', '14:30:00', '16:00:00'),
+                         timespan='minute',
+                         fill_gaps=True,
+                         per_contract_commission=0.01,
+                         multiplier=1,
+                         polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
+                         ).run_simulation()
+
+full_set = pd.concat([test1, test2, test3, test4])
+model = apply_predictive_model(full_set)
 
 
 def predict_profit_percent_specific_inputs(model, feature_names, **kwargs):
@@ -105,24 +152,5 @@ predicted_profit = predict_profit_percent_specific_inputs(
     exit_stock_volume=entry_stock_volume * (1 + agg_change_model_percent),
     stock_price_change_percent=abs((exit_stock_price / entry_stock_price) - 1)
 )
-print_profit_percent_for_times(test, entry_time, exit_time)
+print_profit_percent_for_times(full_set, entry_time, exit_time)
 print(f"Predicted Profit Percent: {predicted_profit * 100:.4f} %")
-
-comp = StraddleStrategy(ticker=ticker_test,
-                        strike=strike_test,
-                        expiration_date='2024-03-15',
-                        quantity=10,
-                        entry_date='2024-02-28',
-                        exit_date='2024-02-28',
-                        strategy_type='long',
-                        entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
-                        timespan='minute',
-                        fill_gaps=True,
-                        per_contract_commission=0.01,
-                        multiplier=1,
-                        polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
-                        ).run_simulation()
-
-print("COMP REAL:")
-print_profit_percent_for_times(comp, entry_time, exit_time)
-

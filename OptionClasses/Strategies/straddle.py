@@ -18,7 +18,8 @@ class StraddleStrategy:
                  closed_market_period: tuple = ('09:30:00', '16:00:00'),
                  pricing_criteria: str = 'h',
                  multiplier: int = 1,
-                 polygon_api_key: str = 'r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
+                 polygon_api_key: str = 'r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz',
+                 for_machine_learning: bool = True
                  ) -> None:
         """
         Shared expiration, strike, ticker, and quantity in this class
@@ -38,6 +39,7 @@ class StraddleStrategy:
         self.quantity = quantity
         self.pricing_criteria = pricing_criteria
         self.strategy_type = strategy_type.upper()
+        self.for_machine_learning = for_machine_learning
 
         self.contract_1 = SingleContractStrategy(
             ticker=self.ticker,
@@ -103,7 +105,8 @@ class StraddleStrategy:
 
         merged_df['strategy_profit_dollars'] = dollars_profit
         merged_df['strategy_profit_percent'] = abs(dollars_profit / (
-                    entry_value_less_commission - one_way_commission * 2 + 1e-8))  # Avoids ZeroDivision
+                    entry_value_less_commission - one_way_commission * 2 + 1e-8)) if self.for_machine_learning else dollars_profit / (
+                    entry_value_less_commission - one_way_commission * 2 + 1e-8)  # Avoids ZeroDivision
         merged_df['contract_change_dollars'] = contract_change
         merged_df['contract_change_percent'] = contract_change / (
                     entry_value_less_commission + 1e-8)  # Add a small value to avoid division by zero
@@ -115,8 +118,7 @@ class StraddleStrategy:
                         'contract_change_dollars_x', 'contract_change_percent_x', 'strategy_profit_dollars_x',
                         'strategy_profit_percent_x', 'entry_strategy_price_y', 'exit_strategy_price_y',
                         'contract_change_dollars_y', 'contract_change_percent_y', 'strategy_profit_dollars_y',
-                        'strategy_profit_percent_y', 'stock_price_change_dollars', 'strategy_profit_dollars',
-                        'contract_change_dollars', 'contract_change_percent', 'exit_stock_price',
+                        'strategy_profit_percent_y', 'stock_price_change_dollars', 'exit_stock_price',
                         'stock_price_change_dollars_x', 'stock_price_change_percent_x', 'exit_stock_volume_weigthed_y',
                         'stock_price_change_dollars_y', 'stock_price_change_percent_y', 'entry_stock_price',
                         'entry_stock_volume_x', 'entry_stock_volume_y',  'exit_stock_price_x', 'exit_stock_price_y',
@@ -132,8 +134,6 @@ class StraddleStrategy:
             'Average Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).mean(),
             'Average Strategy Profit (Dollars)': df['strategy_profit_dollars'].astype(float).mean(),
             'Standard Deviation of Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).std(),
-            'Average Stock Change (Dollars)': df['stock_price_change_dollars'].astype(float).mean(),
-            'Average Stock Change (Percent)': df['stock_price_change_percent'].astype(float).mean(),
             'Win Rate': (df['strategy_profit_dollars'].astype(float) > 0).mean(),
             'Average Contract Change (Dollars)': df['contract_change_dollars'].astype(float).mean(),
             'Average Contract Change (Percent)': df['contract_change_percent'].astype(float).mean(),
@@ -156,21 +156,21 @@ class StraddleStrategy:
 
         return pd.DataFrame(meta_data.items(), columns=['Metric', 'Value'])
 
-
-test = StraddleStrategy(ticker='aapl',
-                        strike=185,
-                        expiration_date='2024-03-01',
-                        quantity=1,
-                        entry_date='2024-02-28',
-                        exit_date='2024-02-28',
-                        strategy_type='long',
-                        entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
-                        timespan='minute',
-                        fill_gaps=True,
-                        per_contract_commission=0.01,
-                        multiplier=1,
-                        polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
-                        )
+#
+# test = StraddleStrategy(ticker='aapl',
+#                         strike=180,
+#                         expiration_date='2024-03-01',
+#                         quantity=1,
+#                         entry_date='2024-02-28',
+#                         exit_date='2024-02-28',
+#                         strategy_type='long',
+#                         entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
+#                         timespan='minute',
+#                         fill_gaps=True,
+#                         per_contract_commission=0.01,
+#                         multiplier=1,
+#                         polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
+#                         )
 
 
 # print(test.run_simulation().columns)
