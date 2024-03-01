@@ -93,8 +93,10 @@ class StraddleStrategy:
             merged_df['entry_contract_price_y']))
 
         merged_df['entry_stock_price'] = merged_df['entry_stock_price_x']
+        merged_df['entry_strike_less_stock'] = self.strike - merged_df['entry_stock_price_x']
         merged_df['entry_stock_volume'] = merged_df['entry_stock_volume_x']
         merged_df['exit_stock_price'] = merged_df['exit_stock_price_x']
+        merged_df['exit_strike_less_stock'] = self.strike - merged_df['exit_stock_price_x']
         merged_df['exit_stock_volume'] = merged_df['exit_stock_volume_x']
         merged_df['stock_price_change_dollars'] = merged_df['stock_price_change_dollars_x']
         merged_df['stock_price_change_percent'] = merged_df['stock_price_change_percent_x']
