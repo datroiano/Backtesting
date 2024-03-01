@@ -1,10 +1,11 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from OptionClasses.Strategies.straddle import StraddleStrategy
 from UseFunctions.date_time import to_unix_time
-from UseFunctions.print_df_excel import save_df_to_excel, print_column_values
+
+# BEST MODEL SO FAR
 
 
 def apply_predictive_model(data):
@@ -12,17 +13,17 @@ def apply_predictive_model(data):
     y = data['strategy_profit_percent']
     feature_names = x.columns  # Get feature names
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
-    model = LinearRegression()
+    model = RandomForestRegressor(random_state=42)  # Using Random Forest Regressor
     model.fit(x_train, y_train)
     predictions = model.predict(x_test)
     mse = mean_squared_error(y_test, predictions)
     return mse, model, feature_names
 
 
-test = StraddleStrategy(ticker='aapl',
-                        strike=185,
+test = StraddleStrategy(ticker='nvda',
+                        strike=790,
                         expiration_date='2024-03-01',
-                        quantity=1,
+                        quantity=5,
                         entry_date='2024-02-28',
                         exit_date='2024-02-28',
                         strategy_type='long',
@@ -54,8 +55,8 @@ def print_profit_percent_for_times(df, entry_time, exit_time):
 
 entry_time = to_unix_time('2024-02-28 11:28:00')
 exit_time = to_unix_time('2024-02-28 15:30:00')
-entry_stock_price = 180
-exit_stock_price = 175
+entry_stock_price = 790
+exit_stock_price = 800
 
 predicted_profit = predict_profit_percent_specific_inputs(
     model[1], model[2],

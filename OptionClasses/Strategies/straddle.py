@@ -114,9 +114,9 @@ class StraddleStrategy:
                         'strategy_profit_percent_x', 'entry_strategy_price_y', 'exit_strategy_price_y',
                         'contract_change_dollars_y', 'contract_change_percent_y', 'strategy_profit_dollars_y',
                         'strategy_profit_percent_y', 'stock_price_change_dollars', 'strategy_profit_dollars',
-                        'contract_change_dollars', 'contract_change_percent',
+                        'contract_change_dollars', 'contract_change_percent', 'exit_stock_price',
                         'stock_price_change_dollars_x', 'stock_price_change_percent_x', 'exit_stock_volume_weigthed_y',
-                        'stock_price_change_dollars_y', 'stock_price_change_percent_y', 'entry_stock_price', 'exit_stock_price',
+                        'stock_price_change_dollars_y', 'stock_price_change_percent_y', 'entry_stock_price',
                         'entry_stock_volume_x', 'entry_stock_volume_y',  'exit_stock_price_x', 'exit_stock_price_y',
                         'exit_stock_volume_x', 'exit_stock_volume_y'], axis=1, inplace=True)
 
