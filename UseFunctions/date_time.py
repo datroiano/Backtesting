@@ -27,3 +27,25 @@ def previous_day(input_date):
     else:
         previous_date = date_obj - timedelta(days=1)
     return previous_date.strftime('%Y-%m-%d')
+
+
+def unix_ms_to_seconds_since_midnight(unix_time_str):
+    unix_seconds = unix_time_str / 1000
+    date_time = datetime.fromtimestamp(unix_seconds)
+    midnight_time = datetime(date_time.year, date_time.month, date_time.day)
+    seconds_since_midnight = (date_time - midnight_time).total_seconds()
+    return seconds_since_midnight
+
+
+def seconds_since_midnight_to_readable_time(seconds_since_midnight):
+    hours = int(seconds_since_midnight // 3600)
+    minutes = int((seconds_since_midnight % 3600) // 60)
+    seconds = int(seconds_since_midnight % 60)
+    time_string = '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+    return time_string
+
+
+def readable_time_to_seconds_since_midnight(readable_time):
+    hours, minutes, seconds = map(int, readable_time.split(':'))
+    total_seconds = hours * 3600 + minutes * 60 + seconds
+    return total_seconds

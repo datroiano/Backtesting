@@ -136,7 +136,7 @@ class SingleContractStrategy:
                 'exit_volume_weighted': exit_point['vw'],
                 'exit_runs': exit_point['n'],
                 'exit_stock_volume': exit_point.get('sv', None),
-                'exit_stock_volume_weigthed': exit_point.get('svw', None),
+                'exit_stock_volume_weighted': exit_point.get('svw', None),
                 'stock_price_change_dollars': stock_price_change,
                 'stock_price_change_percent': stock_price_change_percent,
                 'contract_change_dollars': f'{contract_change_dollars:.2f}',
