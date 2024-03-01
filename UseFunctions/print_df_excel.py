@@ -35,10 +35,13 @@ def print_row_values(df, entry_time, exit_time):
     filtered_df = df[(df['entry_time'] == entry_time) & (df['exit_time'] == exit_time)]
     if filtered_df.empty:
         print("No rows found with the specified entry_time and exit_time.")
-        return
+        return []
 
-    print("Row with entry_time =", entry_time, "and exit_time =", exit_time, "found:")
+    profit_percent_values = []
     for index, row in filtered_df.iterrows():
         print(f"Index: {index}")
         for key, value in row.items():
             print(f"{key}: {value}")
+        profit_percent_values.append(row['strategy_profit_percent'])
+
+    return profit_percent_values

@@ -84,7 +84,7 @@ test4 = StraddleStrategy(ticker='aapl',
                          polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
                          ).run_simulation()
 
-full_set = pd.concat([test1, test2, test3, test4])
+full_set = pd.concat([test4])
 model_from_test = apply_predictive_model(full_set)
 
 
@@ -111,7 +111,7 @@ test4_exception = StraddleStrategy(ticker='aapl',
                                    for_machine_learning=False
                                    ).run_simulation()
 
-print_row_values(test4_exception, entry_time=to_unix_time('2024-02-26 10:45:00'),
+x1 = print_row_values(test4_exception, entry_time=to_unix_time('2024-02-26 10:45:00'),
                  exit_time=to_unix_time('2024-02-26 14:45:00'))
 
 # GUESS CRITERIA
@@ -124,7 +124,7 @@ exit_volume_weighted = entry_volume_weighted
 entry_transactions = 10
 exit_transactions = 15
 entry_stock_price = 181
-exit_stock_price = 185
+exit_stock_price = 181.5
 entry_stock_volume = 90000
 exit_stock_volume = entry_stock_volume
 entry_stock_volume_weighted = entry_stock_price
@@ -151,4 +151,5 @@ predicted_profit = predict_profit_percent_specific_inputs(
     stock_price_change_percent=stock_price_change_percent
 )
 
-print(f"Predicted Profit Percent: {predicted_profit * 100:.4f}%")
+print(f"\nPredicted Profit Percent: {predicted_profit * 100:.4f}%")
+print(f"Actual Returned Profit: {x1[0] * 100:.4f}%")
