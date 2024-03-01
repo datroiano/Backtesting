@@ -187,7 +187,6 @@ class StraddleStrategy:
         return entry_exit_dict
 
 
-
 # test = StraddleStrategy(ticker='aapl',
 #                         strike=180,
 #                         expiration_date='2024-03-01',

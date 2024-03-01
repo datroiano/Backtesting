@@ -31,11 +31,14 @@ def save_df_to_excel(df: pd.DataFrame, file_name: str = 'data.xlsx') -> None:
         print("Permission Error. Check file status.")
 
 
-def print_column_values(dataframe, column_key):
-    if column_key not in dataframe.columns:
-        print(f"Column '{column_key}' not found in the dataframe.")
+def print_row_values(df, entry_time, exit_time):
+    filtered_df = df[(df['entry_time'] == entry_time) & (df['exit_time'] == exit_time)]
+    if filtered_df.empty:
+        print("No rows found with the specified entry_time and exit_time.")
         return
-    column_values = dataframe[column_key].tolist()
-    print(f"Values for column '{column_key}':")
-    for value in column_values:
-        print(value)
+
+    print("Row with entry_time =", entry_time, "and exit_time =", exit_time, "found:")
+    for index, row in filtered_df.iterrows():
+        print(f"Index: {index}")
+        for key, value in row.items():
+            print(f"{key}: {value}")

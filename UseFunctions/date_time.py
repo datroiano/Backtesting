@@ -29,6 +29,16 @@ def previous_day(input_date):
     return previous_date.strftime('%Y-%m-%d')
 
 
+def unix_time_to_time_past_midnight(unix_time_ms):
+    timestamp = datetime.fromtimestamp(unix_time_ms / 1000.0)
+    midnight = timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
+    time_past_midnight = timestamp - midnight
+    hours = time_past_midnight.seconds // 3600
+    minutes = (time_past_midnight.seconds % 3600) // 60
+    seconds = time_past_midnight.seconds % 60
+    return hours, minutes, seconds
+
+
 def unix_ms_to_seconds_since_midnight(unix_time_str):
     unix_seconds = unix_time_str / 1000
     date_time = datetime.fromtimestamp(unix_seconds)
