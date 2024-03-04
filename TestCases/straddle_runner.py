@@ -2,8 +2,8 @@ from OptionClasses.Strategies.straddle import StraddleStrategy
 from MachineLearning.conversion import clean_df
 
 
-test = StraddleStrategy(ticker='aapl',
-                        strike=180,
+test = StraddleStrategy(ticker='nvda',
+                        strike=790,
                         expiration_date='2024-03-01',
                         quantity=1,
                         entry_date='2024-02-29',
