@@ -43,3 +43,31 @@ def create_options_ticker(ticker: str, strike: float, expiration_date: str, cont
     expiry = f'{expiration_year}{expiration_month}{expiration_day}'
 
     return f'O:{ticker}{expiry}{contract_type}{strike_string_for_insertion}'
+
+
+def calculate_stock_linear_correlated_measure(exit_stock_price, entry_stock_price, strike_price):
+    """
+    Calculate the stock_linear_correlated_measure based on exit_stock_price, entry_stock_price, and strike_price.
+
+    Parameters:
+    - exit_stock_price: Exit stock price
+    - entry_stock_price: Entry stock price
+    - strike_price: Strike price at entry
+
+    Returns:
+    - Stock_linear_correlated_measure
+    """
+    # Calculate the difference between the exit stock price and entry stock price
+    stock_price_difference = abs(exit_stock_price - entry_stock_price)
+
+    # Calculate the difference between the exit stock price and strike price at entry
+    stock_strike_difference = abs(exit_stock_price - strike_price)
+
+    # Use the maximum of stock_strike_difference and entry_stock_price to ensure capturing the steeper movement
+    divisor = max(stock_strike_difference, entry_stock_price)
+
+    # Calculate the stock_linear_correlated_measure
+    stock_linear_correlated_measure = stock_price_difference / divisor
+
+    return stock_linear_correlated_measure
+

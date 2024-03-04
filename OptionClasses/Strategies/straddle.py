@@ -10,8 +10,7 @@ class StraddleStrategy:
                  exit_date: str, entry_exit_period: tuple, strategy_type: str = 'long', fill_gaps: bool = True,
                  timespan: str = 'minute', per_contract_commission: float = 0.00,
                  closed_market_period: tuple = ('09:30:00', '16:00:00'), pricing_criteria: str = 'h',
-                 multiplier: int = 1, polygon_api_key: str = 'r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz',
-                 for_machine_learning: bool = True) -> None:
+                 multiplier: int = 1, polygon_api_key: str = 'r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz') -> None:
         """
         Shared expiration, strike, ticker, and quantity in this class
         Can be either short or long
@@ -31,7 +30,6 @@ class StraddleStrategy:
         self.quantity = quantity
         self.pricing_criteria = pricing_criteria
         self.strategy_type = strategy_type.upper()
-        self.for_machine_learning = for_machine_learning
 
         self.contract_1 = SingleContractStrategy(
             ticker=self.ticker,
@@ -76,6 +74,9 @@ class StraddleStrategy:
         merged_df = pd.merge(contract_1_trades, contract_2_trades, on=['entry_time', 'exit_time'])
         is_long = self.strategy_type == 'LONG'
 
+        # Appending metadata (for now, strike is all we need)
+        merged_df['strike_price'] = self.strike
+
         # Dealing with strategic profit (cleaning)
         one_way_commission = self.quantity * self.per_contract_commission
         contract_change = pd.to_numeric(merged_df['exit_contract_price_x']) + pd.to_numeric(
@@ -87,9 +88,8 @@ class StraddleStrategy:
         merged_df.drop(['exit_contract_price_x', 'exit_contract_price_y', 'entry_contract_price_x',
                         'entry_contract_price_y'], axis=1, inplace=True)
         merged_df['strategy_profit_dollars'] = dollars_profit
-        merged_df['strategy_profit_percent'] = abs(dollars_profit / (
-                entry_value_less_commission - one_way_commission * 2 + 1e-8)) if self.for_machine_learning else dollars_profit / (
-                entry_value_less_commission - one_way_commission * 2 + 1e-8)  # Avoids ZeroDivision
+        merged_df['strategy_profit_percent'] = dollars_profit / (entry_value_less_commission -
+                                                                 one_way_commission * 2 + 1e-8)  # Avoids ZeroDivision
         merged_df['contract_change_dollars'] = contract_change
         merged_df['contract_change_percent'] = contract_change / (
                 entry_value_less_commission + 1e-8)  # Add a small value to avoid division by zero
@@ -142,10 +142,6 @@ class StraddleStrategy:
                         'strategy_profit_dollars_y', 'strategy_profit_percent_y', 'entry_strategy_price_x'],
                        axis=1, inplace=True)
 
-        if self.for_machine_learning:
-            merged_df['entry_time'] = merged_df['entry_time'].apply(unix_ms_to_seconds_since_midnight)
-            merged_df['exit_time'] = merged_df['exit_time'].apply(unix_ms_to_seconds_since_midnight)
-
         merged_df.rename(columns={'ticker_x': 'ticker'}, inplace=True)
 
         return merged_df
@@ -186,23 +182,3 @@ class StraddleStrategy:
         entry_exit_dict = filtered_data.iloc[0].to_dict()
         return entry_exit_dict
 
-
-# test = StraddleStrategy(ticker='aapl',
-#                         strike=180,
-#                         expiration_date='2024-03-01',
-#                         quantity=1,
-#                         entry_date='2024-02-28',
-#                         exit_date='2024-02-28',
-#                         strategy_type='long',
-#                         entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
-#                         timespan='minute',
-#                         fill_gaps=True,
-#                         per_contract_commission=0.01,
-#                         multiplier=1,
-#                         polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
-#                         )
-
-# print(test.run_simulation().columns)
-# print(StraddleStrategy.get_meta_data(test.run_simulation()))
-# print(make_df_input(test.run_simulation()))
-# save_df_to_excel(test.run_simulation())
