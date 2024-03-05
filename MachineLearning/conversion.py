@@ -10,7 +10,7 @@ def clean_df(df: pd.DataFrame, midnight_time: bool = True) -> pd.DataFrame:
     df.drop(['exit_stock_volume_weighted', 'entry_stock_volume_weighted',
              'entry_volume_weighted', 'exit_volume_weighted'], axis=1, inplace=True)
 
-    stock_price_difference = abs(df['exit_stock_price'] / df['entry_stock_price']) - 1
+    stock_price_difference = df['exit_stock_price'] / df['entry_stock_price'] - 1
     df['stock_linear_correlated_measure'] = stock_price_difference
     df.drop(['entry_stock_price', 'exit_stock_price', 'strike_price'], axis=1, inplace=True)
 
