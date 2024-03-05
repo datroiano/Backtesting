@@ -211,5 +211,5 @@ class SingleContractStrategy:
 #                               multiplier=1,
 #                               polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
 #                               )
-# # print(test.run_simulation().columns)
+
 # print(SingleContractStrategy.get_meta_data(test.run_simulation()))

@@ -1,20 +1,15 @@
-from OptionClasses.Strategies.straddle import StraddleStrategy
+from TestCases.straddle_plays import aapl, nvda, msft, crm
 from MachineLearning.conversion import clean_df
+import pandas as pd
+
+nvda_sim = nvda.run_simulation()
+aapl_sim = aapl.run_simulation()
+msft_sim = msft.run_simulation()
+crm_sim = crm.run_simulation()
+
+combined_sim = pd.concat([aapl_sim, nvda_sim, msft_sim, crm_sim], ignore_index=True)
 
 
-test = StraddleStrategy(ticker='nvda',
-                        strike=825,
-                        expiration_date='2024-03-01',
-                        quantity=5,
-                        entry_date='2024-02-29',
-                        exit_date='2024-02-29',
-                        strategy_type='long',
-                        entry_exit_period=('11:30:00', '12:30:00', '15:30:00', '16:00:00'),
-                        timespan='minute',
-                        fill_gaps=True,
-                        per_contract_commission=0.01,
-                        multiplier=1,
-                        polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'
-                        )
+learning_frame = clean_df(combined_sim)
 
-learning_frame = clean_df(test.run_simulation())
+

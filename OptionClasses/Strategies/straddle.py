@@ -82,6 +82,7 @@ class StraddleStrategy:
         contract_change = pd.to_numeric(merged_df['exit_contract_price_x']) + pd.to_numeric(
             merged_df['exit_contract_price_y']) - pd.to_numeric(merged_df['entry_contract_price_x']) - pd.to_numeric(
             merged_df['entry_contract_price_y'])
+
         dollars_profit = (contract_change if is_long else -contract_change) - (one_way_commission * 2)
         entry_value_less_commission = pd.to_numeric(merged_df['entry_contract_price_x']) + pd.to_numeric(
             merged_df['entry_contract_price_y'])
@@ -134,7 +135,6 @@ class StraddleStrategy:
         merged_df['stock_price_change_percent'] = merged_df['stock_price_change_percent_x']
         merged_df.drop(['stock_price_change_dollars_x', 'stock_price_change_dollars_y',
                         'stock_price_change_percent_x', 'stock_price_change_percent_y'], axis=1, inplace=True)
-
         # Drop redundant or unnecessary columns
         merged_df.drop(['exit_strategy_price_x', 'contract_change_dollars_x', 'contract_change_percent_x',
                         'strategy_profit_dollars_x', 'strategy_profit_percent_x', 'entry_strategy_price_y',
@@ -143,7 +143,6 @@ class StraddleStrategy:
                        axis=1, inplace=True)
 
         merged_df.rename(columns={'ticker_x': 'ticker'}, inplace=True)
-
         return merged_df
 
     @staticmethod

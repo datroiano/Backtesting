@@ -17,19 +17,11 @@ def clean_df(df: pd.DataFrame, midnight_time: bool = True) -> pd.DataFrame:
     df['strike_price'] = df['strike_price'].astype(float)
 
     # Calculate z_exit and z_entry
-    z_exit = norm.cdf(np.log(df['exit_stock_price'] / df['strike_price']) - 1)
-    z_entry = norm.cdf(np.log(df['entry_stock_price'] / df['strike_price']) - 1)
+    z_exit = norm.cdf(np.log(df['exit_stock_price'] / df['strike_price']))
+    z_entry = norm.cdf(np.log(df['entry_stock_price'] / df['strike_price']))
 
     # Calculate the stock_linear_correlated_measure
-    df['stock_linear_correlated_measure'] = abs(z_exit * (df['exit_stock_price'] - df['strike_price']) + (
-            z_entry * (df['entry_stock_price'] - df['strike_price'])) / (z_entry * (df['entry_stock_price'] -
-                                                                                    df['strike_price'])))
-    # Calculate the 15th and 85th percentiles
-    percentile_15 = df['stock_linear_correlated_measure'].quantile(0.2)
-    percentile_85 = df['stock_linear_correlated_measure'].quantile(0.8)
-    df = df[(df['stock_linear_correlated_measure'] >= percentile_15) & (df['stock_linear_correlated_measure'] <=
-                                                                        percentile_85)]
-
+    df['stock_linear_correlated_measure'] = abs(df['exit_stock_price'] / df['entry_stock_price']) - 1
     df.drop(['entry_stock_price', 'exit_stock_price', 'strike_price'], axis=1, inplace=True)
 
     # Get rid of other "dependent" variables
@@ -38,8 +30,6 @@ def clean_df(df: pd.DataFrame, midnight_time: bool = True) -> pd.DataFrame:
 
     # Change other measures to deltas, rather than having absolute numbers
     df['delta_volume_percent'] = (df['exit_volume'] / df['entry_volume']) - 1
-    percentile_50 = df['delta_volume_percent'].quantile(0.50)
-    df = df[df['delta_volume_percent'] >= percentile_50]
     df.drop(['exit_volume', 'entry_volume'], axis=1, inplace=True)
     df['delta_stock_volume_percent'] = (df['exit_stock_volume'] / df['entry_stock_volume']) - 1
     df.drop(['exit_stock_volume', 'entry_stock_volume'], axis=1, inplace=True)

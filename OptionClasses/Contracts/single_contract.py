@@ -46,9 +46,9 @@ class SingleOptionsContract:
 
         return stock_data
 
-
+#
 # test_contract = SingleOptionsContract("aapl", 185, '2024-02-16', True)
-# test_contract_data = test_contract.get_stock_prices(from_date='2024-02-12', to_date='2024-02-12',
+# test_contract_data = test_contract.get_data(from_date='2024-02-12', to_date='2024-02-12',
 #                                                     window_start_time='09:30:00', window_end_time='16:30:00',
 #                                                     timespan='minute')
-# print(test_contract_data.columns)
+# print(test_contract_data['t'])
