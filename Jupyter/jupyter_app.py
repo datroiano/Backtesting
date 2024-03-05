@@ -83,4 +83,4 @@ print(strategy_corr_df)
 
 strategy_corr_df = strategy_corr_df['Profit Percent'] * strategy_corr_df['Profit Percent']
 
-print('R squared values:', strategy_corr_df)
+print('R squared values:\n', strategy_corr_df)
