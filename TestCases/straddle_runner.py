@@ -2,12 +2,12 @@ from OptionClasses.Strategies.straddle import StraddleStrategy
 from MachineLearning.conversion import clean_df
 
 
-test = StraddleStrategy(ticker='nvda',
-                        strike=790,
+test = StraddleStrategy(ticker='aapl',
+                        strike=180,
                         expiration_date='2024-03-01',
-                        quantity=1,
-                        entry_date='2024-02-29',
-                        exit_date='2024-02-29',
+                        quantity=5,
+                        entry_date='2024-02-28',
+                        exit_date='2024-02-28',
                         strategy_type='long',
                         entry_exit_period=('10:30:00', '11:30:00', '12:30:00', '16:00:00'),
                         timespan='minute',

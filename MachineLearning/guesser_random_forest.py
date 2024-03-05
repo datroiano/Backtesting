@@ -40,11 +40,20 @@ predicted_profit_percent = guess_profit_percent(
     feature_names,
     entry_time=entry_time,
     exit_time=exit_time,
-    stock_linear_correlated_measure=calculate_stock_linear_correlated_measure(exit_stock_price=exit_stock_price,
-                                                                              entry_stock_price=entry_stock_price,
-                                                                              strike_price=strike_price),
+    stock_linear_correlated_measure=calculate_stock_linear_correlated_measure(
+        exit_stock_price=exit_stock_price,
+        entry_stock_price=entry_stock_price,
+        strike_price=strike_price),
     delta_volume_percent=0,
     delta_stock_volume_percent=0,
     delta_transactions_percent=0)
 
 print("Predicted strategy_profit_percent:", predicted_profit_percent)
+
+filtered_df = learning_frame[(learning_frame['entry_time'] == entry_time) & (learning_frame['exit_time'] == exit_time)]
+
+# Print the strategy_profit_percent column
+if not filtered_df.empty:
+    print('Actual Profit:', filtered_df['strategy_profit_percent'])
+else:
+    print("No matching entry and exit times found in learning_frame.")

@@ -47,12 +47,10 @@ class SingleContractStrategy:
                                                         timespan=self.timespan, multiplier=self.multiplier,
                                                         polygon_api_key=self.polygon_api_key)
 
-            self.stock_data = self._fill_gaps(self.stock_data)
-
             self.stock_data.rename(columns={'v': 'sv', 'o': 'so', 'c': 'sc', 'h': 'sh', 'l': 'sl',
                                             'n': 'sn', 'vw': 'svw'}, inplace=True)
 
-            self.merged_data = pd.merge(self.contract_data, self.stock_data, on='t')
+            self.merged_data = pd.merge(self.contract_data, self.stock_data, on='t', how='inner')
 
     def _fill_gaps(self, securities_data: pd.DataFrame) -> pd.DataFrame:
         trading_start_time = time(int(self.market_open[0:2]), int(self.market_open[3:5]))
