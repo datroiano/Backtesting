@@ -70,4 +70,3 @@ def calculate_stock_linear_correlated_measure(exit_stock_price, entry_stock_pric
     stock_linear_correlated_measure = stock_price_difference / divisor
 
     return stock_linear_correlated_measure
-
