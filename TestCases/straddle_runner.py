@@ -1,22 +1,6 @@
-from TestCases.straddle_plays import aapl, nvda, msft, crm, tgt_earnings, jd_earnings
+from TestCases.straddle_plays import non_earnings_combined, earnings_combined
 from MachineLearning.conversion import clean_df
-import pandas as pd
+from Jupyter.jupyter_app import visualize_and_correlate
 
-nvda_sim = nvda.run_simulation()
-aapl_sim = aapl.run_simulation()
-msft_sim = msft.run_simulation()
-crm_sim = crm.run_simulation()
-tgt_earnings_sim = tgt_earnings.run_simulation()
-jd_earnings_sim = jd_earnings.run_simulation()
-
-combined = False
-earnings_combined = True
-combined_sim = pd.concat([aapl_sim, nvda_sim, msft_sim, crm_sim], ignore_index=True)
-earnings_combined_sim = pd.concat([tgt_earnings_sim, jd_earnings_sim], ignore_index=True)
-
-if earnings_combined:
-    learning_frame = clean_df(earnings_combined_sim)
-else:
-    learning_frame = clean_df(combined_sim) if combined else clean_df(jd_earnings_sim)
-
-
+visualize_and_correlate(clean_df(earnings_combined))
+visualize_and_correlate(clean_df(non_earnings_combined))

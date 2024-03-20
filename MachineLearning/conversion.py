@@ -16,10 +16,6 @@ def clean_df(df: pd.DataFrame, midnight_time: bool = True) -> pd.DataFrame:
     df['entry_stock_price'] = df['entry_stock_price'].astype(float)
     df['strike_price'] = df['strike_price'].astype(float)
 
-    # Calculate z_exit and z_entry
-    z_exit = norm.cdf(np.log(df['exit_stock_price'] / df['strike_price']))
-    z_entry = norm.cdf(np.log(df['entry_stock_price'] / df['strike_price']))
-
     # Calculate the stock_linear_correlated_measure
     df['stock_linear_correlated_measure'] = abs(df['exit_stock_price'] / df['entry_stock_price']) - 1
     df.drop(['entry_stock_price', 'exit_stock_price', 'strike_price'], axis=1, inplace=True)

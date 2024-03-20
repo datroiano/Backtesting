@@ -160,8 +160,7 @@ class StraddleStrategy:
             'Maximum Drawdown (Dollars)': df['strategy_profit_dollars'].astype(float).max() - df[
                 'strategy_profit_dollars'].astype(float).min(),
             'Number of Trades': len(df),
-            'Gap-Filled Trades': ((df['entry_runs_x'] == 0) | (df['exit_runs_x'] == 0) |
-                                  (df['entry_runs_y'] == 0) | (df['exit_runs_y'] == 0)).sum(),
+            # 'Gap-Filled Trades': pass,
             'Profit Factor': df[df['strategy_profit_dollars'].astype(float) > 0]['strategy_profit_dollars'].astype(
                 float).sum() / abs(
                 df[df['strategy_profit_dollars'].astype(float) < 0]['strategy_profit_dollars'].astype(float).sum()),
