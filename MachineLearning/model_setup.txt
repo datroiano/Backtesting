@@ -1,0 +1,26 @@
+Training model based on the following variables:
+
+DEP: After-commission/transaction cost, before-tax profit/loss
+
+IND VARS (assuming day trade):
+- Entry time
+- Exit time
+- Δ Measured Transactions
+- Δ Trading Volume (contracts, not underlying)
+- Stock correlation (asb Δ stock price in time measured)
+
+Issues / ideas / assumptions:
+1. Entry/exit time may change non-independently with Δ transactions & Δ trading volume
+    - Possible solution: omit Δ transactions and Δ trading volume
+
+CASE 1 TEST:
+
+DEP: After-commission/transaction cost, before-tax profit/loss
+
+IND VARS (assuming day trade):
+- Entry time (seconds since midnight, not unix)
+- Exit time (seconds since midnight, not unix)
+- Stock correlation (asb Δ stock price in time measured)
+
+Training the model:
+- Will attempt to find examples where stock price is relatively constant from entry to exit time ~0.05% movement.
