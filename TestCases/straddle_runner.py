@@ -1,4 +1,4 @@
-from TestCases.straddle_plays import non_earnings_combined, earnings_combined
+from TestCases.straddle_plays import earnings_combined
 from MachineLearning.conversion import clean_df, filter_stock_basis
 from Jupyter.jupyter_app import visualize_and_correlate
 
