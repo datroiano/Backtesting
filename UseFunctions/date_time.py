@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import time
 
 
@@ -59,3 +59,28 @@ def readable_time_to_seconds_since_midnight(readable_time):
     hours, minutes, seconds = map(int, readable_time.split(':'))
     total_seconds = hours * 3600 + minutes * 60 + seconds
     return total_seconds
+
+
+def two_date_period(months_since_yesterday: int) -> tuple:
+    today = datetime.now()
+    yesterday = today - timedelta(days=1)
+    target_date = yesterday - timedelta(days=months_since_yesterday * 30)
+    yesterday_str = yesterday.strftime('%Y-%m-%d')
+    target_date_str = target_date.strftime('%Y-%m-%d')
+    return yesterday_str, target_date_str
+
+
+def get_date_next_friday(input_date=None):
+    if input_date is None:
+        today = date.today()
+    else:
+        today = datetime.strptime(input_date, '%Y-%m-%d').date()
+
+    days_until_friday = (4 - today.weekday()) % 7  # Calculate days until next Friday (0=Monday, 1=Tuesday)
+    if days_until_friday == 0:
+        days_until_friday = 7  # If today is Friday, move to next Friday
+    next_friday_date = today + timedelta(days=days_until_friday)
+    formatted_date = next_friday_date.strftime('%Y-%m-%d')
+
+    return formatted_date
+

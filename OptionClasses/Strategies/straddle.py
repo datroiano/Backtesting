@@ -67,11 +67,13 @@ class StraddleStrategy:
             with_stock_prices=True
         )
 
-    def run_simulation(self) -> pd.DataFrame:
+    def run_simulation(self) -> pd.DataFrame or None:
         contract_1_trades = self.contract_1.run_simulation()
         contract_2_trades = self.contract_2.run_simulation()
-
-        merged_df = pd.merge(contract_1_trades, contract_2_trades, on=['entry_time', 'exit_time'])
+        try:
+            merged_df = pd.merge(contract_1_trades, contract_2_trades, on=['entry_time', 'exit_time'])
+        except TypeError:
+            return None
         is_long = self.strategy_type == 'LONG'
 
         # Appending metadata (for now, strike is all we need)
@@ -168,6 +170,20 @@ class StraddleStrategy:
                 float).std(),
             'Average Holding Period (Minutes)': ((pd.to_datetime(df['exit_time'], unit='ms') - pd.to_datetime(
                 df['entry_time'], unit='ms')).dt.total_seconds() / 60).mean(),
+        }
+
+        return pd.DataFrame(meta_data.items(), columns=['Metric', 'Value'])
+
+    @staticmethod
+    def get_meta_data_not_dollars(df: pd.DataFrame) -> pd.DataFrame:
+        meta_data = {
+            'Average Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).mean(),
+            'Standard Deviation of Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).std(),
+            'Win Rate': (df['strategy_profit_percent'].astype(float) > 0).mean(),
+            'Maximum Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).max(),
+            'Minimum Strategy Profit (Percent)': df['strategy_profit_percent'].astype(float).min(),
+            'Sharpe Ratio': df['strategy_profit_percent'].astype(float).mean() / df['strategy_profit_percent'].astype(
+                float).std(),
         }
 
         return pd.DataFrame(meta_data.items(), columns=['Metric', 'Value'])
