@@ -57,6 +57,7 @@ class StrategyTestInputs:
         self.quantity = test_quantity
         self.per_contract_commission = per_contract_commission
         self.polygon_api_key = polygon_api_key
+        self.errors_list = []
         self.search_criteria = self._get_search_criteria()
         self.inputs_list = self._get_inputs_list()
 
@@ -66,25 +67,37 @@ class StrategyTestInputs:
         earnings_output = earnings_lookup.earnings_output
 
         search_criteria = []
+        errors_list = []
 
         for ticker in self.tickers:
             ticker_earnings = earnings_output[earnings_output['symbol'] == ticker.upper()]
             if not ticker_earnings.empty:
                 search_criteria.extend(ticker_earnings.to_dict(orient='records'))
+            else:
+                errors_list.append({'ticker': ticker, 'error': 'Earnings Calendar Search'})
+
+        self.errors_list = errors_list
 
         return search_criteria
 
-    def _get_inputs_list(self) -> list[dict]:
+    def _get_inputs_list(self) -> (list[dict], list[dict]):
         inputs_list = []
+        errors_list = []
         for company in self.search_criteria:
+            underlying = company['symbol'].upper()
+            trade_date = previous_day(company['date']) if company['time'] == 'bmo' else company['date']
+            expiration_date = get_date_next_friday(trade_date)
             try:
-                underlying = company['symbol'].upper()
-                trade_date = previous_day(company['date']) if company['time'] == 'bmo' else company['date']
-                expiration_date = get_date_next_friday(trade_date)
                 average_entry_underlying = SingleStock(ticker=underlying, from_date=trade_date, from_time=self.entry1,
                                                        to_date=trade_date, to_time=self.entry2,
                                                        fill_gaps=False).get_average_price()
-
+            except TypeError:
+                errors_list.append({'ticker': underlying, 'error': 'TypeError Stock'})
+                continue
+            except KeyError:
+                errors_list.append({'ticker': underlying, 'error': 'KeyError Stock'})
+                continue
+            try:
                 strike = ContractSpread(
                     underlying, current_underlying=average_entry_underlying,
                     expiration_date_gte=expiration_date,
@@ -100,14 +113,19 @@ class StrategyTestInputs:
 
                 inputs_list.append(entry)
             except TypeError:
+                errors_list.append({'ticker': underlying, 'error': 'TypeError Spread'})
                 continue
             except KeyError:
+                errors_list.append({'ticker': underlying, 'error': 'KeyError Spread'})
                 continue
+
+        self.errors_list.extend(errors_list)
 
         return inputs_list
 
-    def aggregate_ticker_simulations(self) -> pd.DataFrame:
-        all_simulations = []  # List to store all simulation DataFrames
+    def aggregate_ticker_simulations(self) -> (pd.DataFrame, list[dict]):
+        all_simulations = []  # List to store all simulation DataFrames`
+        errors_list = []
         for input_company in self.inputs_list:
             try:
                 sim_inputs = StraddleStrategy(ticker=input_company['ticker'],
@@ -129,25 +147,63 @@ class StrategyTestInputs:
                 if simulation is not None:  # Check if simulation is not None
                     all_simulations.append(simulation)  # Append each simulation DataFrame to the list
             except KeyError:
+                errors_list.append({'ticker': input_company['ticker'], 'error': 'KeyError Strategy'})
                 continue
 
-        return pd.concat(all_simulations, ignore_index=True)  # Concatenate all simulation DataFrames
+        full_sims = pd.concat(all_simulations, ignore_index=True)  # Concatenate all simulation DataFrames
+
+        self.errors_list.extend(errors_list)
+
+        return full_sims
 
 
-tickers = ['aapl', 'nvda', 'msft', 'goog', 'amzn', 'fb', 'tsla', 'brk', 'jpm', 'wmt',
-           'v', 'pg', 'ma', 'jnj', 'hd', 'intc', 'unh', 'baba', 't', 'crm',
-           'ko', 'cmcsa', 'dis', 'nflx', 'pypl', 'pep', 'abt', 'adbe', 'nke', 'mcd',
-           'hon', 'bud', 'tmus', 'axp', 'cost', 'vz', 'mrk', 'orcl', 'pfe', 'amgn',
-           'abbv', 'mdt', 'dhr', 'now', 'crm', 'acb', 'twtr', 'nclh', 'tsm',
-           'amd', 'cat', 'ba', 'sbux', 'csco', 'fdx', 'ge', 'gm', 'hpe', 'ibm',
-           'low', 'lmt', 'mo', 'sbux', 'ups', 'xom', 'snap', 'nke', 'tsn', 'ko',
-           'pep', 'bud', 'mt', 'cl', 'k', 'gis', 'clx', 'pg', 'pg', 'ko',
-           'pep', 'mo', 'bmy', 'gild', 'abt', 'dhr', 'tgt', 'wba', 'mnst',
-           'kmb', 'cost', 'tjx', 'pm', 'mdlz', 'cl', 'k', 'avgo', 'txn', 'mu']
+tickers = [
+    'aapl', 'msft', 'amzn', 'goog', 'fb',     # Big Tech
+    'brk', 'jpm', 'v', 'pg', 'ma',            # Finance and Consumer Goods
+    'jnj', 'hd', 'unh', 'intc', 'tsla',       # Healthcare and Automobile
+    'wmt', 'baba', 't', 'crm', 'ko',          # Retail and Communications
+    'cmcsa', 'dis', 'nflx', 'pep', 'abt',     # Media and Consumer Goods
+    'adbe', 'nke', 'mcd', 'hon', 'bud',       # Consumer Goods and Beverage
+    'tmus', 'axp', 'cost', 'vz', 'mrk',       # Telecom and Pharmaceuticals
+    'orcl', 'pfe', 'amgn', 'abbv', 'mdt',     # Technology and Healthcare
+    'dhr', 'now', 'acb', 'twtr', 'nclh',      # Healthcare and Social Media
+    'tsm', 'amd', 'cat', 'ba', 'sbux',        # Technology and Aerospace
+    'csco', 'fdx', 'ge', 'gm', 'hpe',         # Technology and Automotive
+    'ibm', 'low', 'lmt', 'mo', 'ups',         # Technology and Retail
+    'xom', 'snap', 'tsn', 'mt', 'cl',         # Energy and Consumer Goods
+    'k', 'gis', 'clx', 'bmy', 'gild',         # Consumer Goods and Pharmaceuticals
+    'tgt', 'wba', 'mnst', 'kmb', 'tjx',       # Retail and Consumer Goods
+    'pm', 'mdlz', 'avgo', 'txn', 'mu',        # Technology and Semiconductors
+    'nflx', 'nke', 'ko', 'pep', 'bud',        # Beverage and Consumer Goods
+    'mo', 'cl', 'k', 'pg', 'pg', 'ko',        # Consumer Goods and Beverage
+    'pep', 'mo', 'bmy', 'gild', 'abt',        # Pharmaceuticals and Healthcare
+    'dhr', 'tgt', 'wba', 'mnst', 'kmb',       # Retail and Consumer Goods
+    'cost', 'tjx', 'pm', 'mdlz', 'cl',        # Consumer Goods
+    'k', 'avgo', 'txn', 'mu',                 # Semiconductors and Technology
+    'msft', 'amzn', 'goog', 'fb', 'brk',      # Big Tech and Finance
+    'jpm', 'v', 'pg', 'ma', 'jnj',            # Finance and Healthcare
+    'hd', 'unh', 'intc', 'tsla', 'wmt',       # Retail and Automobile
+    'baba', 't', 'crm', 'ko', 'cmcsa',        # Retail and Communications
+    'dis', 'pep', 'abt', 'adbe', 'nke',       # Consumer Goods and Media
+    'mcd', 'hon', 'bud', 'tmus', 'axp',       # Consumer Goods and Telecom
+    'cost', 'vz', 'mrk', 'orcl', 'pfe',       # Pharmaceuticals and Technology
+    'amgn', 'abbv', 'mdt', 'dhr', 'now',      # Healthcare and Technology
+    'crm', 'acb', 'twtr', 'nclh', 'tsm',      # Social Media and Technology
+    'amd', 'cat', 'ba', 'sbux', 'csco',       # Technology and Retail
+    'fdx', 'ge', 'gm', 'hpe', 'ibm',          # Technology and Automotive
+    'low', 'lmt', 'mo', 'ups', 'xom',         # Energy and Retail
+    'snap', 'tsn', 'mt', 'cl', 'k',           # Consumer Goods and Beverage
+    'gis', 'clx', 'pg', 'pg', 'ko',           # Consumer Goods and Beverage
+    'pep', 'mo', 'bmy', 'gild', 'abt',        # Pharmaceuticals and Healthcare
+    'dhr', 'tgt', 'wba', 'mnst', 'kmb',       # Retail and Consumer Goods
+    'cost', 'tjx', 'pm', 'mdlz', 'cl',        # Consumer Goods
+    'k', 'avgo', 'txn', 'mu'                  # Semiconductors and Technology
+]
 
 
-x = StrategyTestInputs(tickers, entry_exit_period=('10:30:00', '11:30:00', '15:30:00', '16:00:00'))
+
+
+x = StrategyTestInputs(tickers, entry_exit_period=('10:30:00', '11:30:00', '15:30:00', '16:00:00'), lookup_period_months=5)
 sims = x.aggregate_ticker_simulations()
+errors = x.errors_list
 
-# test = EarningsLookup(from_date='2023-11-12', to_date='2024-03-21', report_time='amc')
-# print(test.get_specific_company(ticker='AAPL'))
