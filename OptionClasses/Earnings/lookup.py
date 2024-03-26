@@ -97,6 +97,9 @@ class StrategyTestInputs:
             except KeyError:
                 errors_list.append({'ticker': underlying, 'error': 'KeyError Stock'})
                 continue
+            except ValueError:
+                errors_list.append({'ticker': underlying, 'error': 'ValueError Stock'})
+                continue
             try:
                 strike = ContractSpread(
                     underlying, current_underlying=average_entry_underlying,
@@ -117,6 +120,9 @@ class StrategyTestInputs:
                 continue
             except KeyError:
                 errors_list.append({'ticker': underlying, 'error': 'KeyError Spread'})
+                continue
+            except ValueError:
+                errors_list.append({'ticker': underlying, 'error': 'ValueError Spread'})
                 continue
 
         self.errors_list.extend(errors_list)
@@ -200,8 +206,46 @@ tickers = [
     'k', 'avgo', 'txn', 'mu'                  # Semiconductors and Technology
 ]
 
-
-
+tickers2 = [
+    'AAPL', 'MSFT', 'AMZN', 'GOOGL', 'GOOG', 'FB', 'TSLA', 'BRK.B', 'NVDA', 'JPM',
+    'JNJ', 'V', 'PYPL', 'HD', 'MA', 'DIS', 'ADBE', 'BAC', 'CRM', 'XOM',
+    'INTC', 'CMCSA', 'VZ', 'NFLX', 'PEP', 'ABT', 'T', 'KO', 'CSCO', 'NKE',
+    'MRK', 'PFE', 'WMT', 'ABBV', 'TMO', 'CVX', 'UNH', 'MDT', 'ORCL', 'ACN',
+    'AMGN', 'IBM', 'HON', 'TXN', 'UPS', 'LMT', 'DHR', 'NEE', 'AVGO',
+    'PM', 'QCOM', 'LOW', 'SBUX', 'LIN', 'PYPL', 'RTX', 'MMM', 'COST', 'GS',
+    'BDX', 'CAT', 'AMD', 'BLK', 'BA', 'GE', 'CHTR', 'INTU', 'MS', 'BMY',
+    'SPGI', 'TFC', 'ISRG', 'VRTX', 'FIS', 'NOW', 'CVS', 'ANTM', 'TMUS',
+    'CCI', 'ZTS', 'CI', 'AMAT', 'AXP', 'MU', 'TJX', 'SYK', 'ADI', 'CSX',
+    'LRCX', 'AON', 'PLD', 'NSC', 'USB', 'TGT', 'D', 'ICE', 'SO', 'MET',
+    'EQIX', 'DE', 'CL', 'TMO', 'TMO', 'DOW', 'BKNG', 'MDLZ', 'WM', 'VRTX',
+    'ZM', 'APD', 'AEP', 'SCHW', 'DUK', 'ILMN', 'SO', 'EMR', 'COF', 'GD',
+    'PSX', 'FDX', 'CB', 'ECL', 'GM', 'CME', 'COP', 'KMB', 'ADP', 'ETN',
+    'WBA', 'A', 'REGN', 'MCD', 'ROP', 'BDX', 'EOG', 'BIIB', 'ROP', 'KLAC',
+    'CCI', 'CI', 'WELL', 'SRE', 'PEG', 'SHW', 'LHX', 'FISV', 'NOC', 'CCI',
+    'ED', 'ITW', 'ROST', 'GLW', 'KMI', 'TRV', 'HUM', 'ALGN', 'DTE', 'AIG',
+    'MMC', 'MMC', 'SYY', 'PGR', 'WEC', 'ALL', 'AFL', 'KLAC', 'APH', 'MET',
+    'EL', 'SYF', 'DFS', 'XLNX', 'IDXX', 'PSA', 'IT', 'KLAC', 'PPL', 'APH',
+    'KHC', 'SJM', 'AWK', 'TEL', 'PCAR', 'HCA', 'RMD', 'STZ', 'EXC', 'VLO',
+    'GL', 'CNC', 'MNST', 'ABC', 'ESS', 'CDW', 'MXIM', 'LNT', 'FAST', 'ULTA',
+    'CTXS', 'PXD', 'DLR', 'ALB', 'DG', 'IQV', 'YUM', 'RE', 'CHD', 'AVB',
+    'WLTW', 'VRSK', 'FRC', 'FTV', 'INFO', 'ETR', 'ODFL', 'MSI', 'MKC',
+    'AWK', 'VFC', 'HIG', 'AMCR', 'FRT', 'VTRS', 'VMC', 'CBRE', 'NDAQ',
+    'DGX', 'HPE', 'TT', 'ETSY', 'ORLY', 'CINF', 'RSG', 'WST', 'OKE', 'BKR',
+    'TSCO', 'EFX', 'AMP', 'CTLT', 'CMS', 'IFF', 'ANSS', 'JBHT', 'BR', 'GPC',
+    'LKQ', 'KEYS', 'ALXN', 'LUV', 'GRMN', 'AES', 'WY', 'EXPD', 'TTWO', 'TXT',
+    'TRMB', 'FLT', 'URI', 'KEY', 'TDG', 'AVY', 'MTB', 'FANG', 'VAR', 'AEE',
+    'NCLH', 'FMC', 'PWR', 'BXP', 'TDY', 'BIO', 'EXR', 'PKI', 'ARNC', 'LDOS',
+    'WDC', 'ANET', 'HPE', 'PFG', 'BKR', 'PKG', 'SLG', 'KSU', 'IP', 'NTRS',
+    'EXPE', 'FTNT', 'WRB', 'HES', 'JBHT', 'NUE', 'LH', 'PAYX', 'EVRG',
+    'GLNG', 'FTI', 'FE', 'DRI', 'RCL', 'MGM', 'NVR', 'JBHT', 'AOS', 'ALK',
+    'DISCK', 'DISCA', 'POOL', 'IFF', 'LW', 'HII', 'J', 'LEG', 'WRK', 'CINF',
+    'F', 'VIAC', 'NVR', 'VIAC', 'SEE', 'UA', 'IPG', 'WRK', 'FLS', 'ALK',
+    'HII', 'CF', 'DISCK', 'BEN', 'APA', 'DISCA', 'PWR', 'TAP', 'FLIR', 'CNP',
+    'KMX', 'LEG', 'BWA', 'NVR', 'FTI', 'IPGP', 'JWN', 'NLSN', 'ROL', 'PNR',
+    'HRB', 'NOV', 'XRX', 'DISCK', 'XRAY', 'ROL', 'UAA', 'XRX', 'SEE', 'EXPD',
+    'TXT', 'NVR', 'WRB', 'NCLH', 'CARR', 'PVH', 'J', 'UA', 'DXC', 'FLS',
+    'CF', 'NVR', 'DISCA', 'UA', 'BWA', 'HRB', 'FLS', 'PKG', 'NVR', 'VIAC',
+    'BEN']
 
 x = StrategyTestInputs(tickers, entry_exit_period=('10:30:00', '11:30:00', '15:30:00', '16:00:00'), lookup_period_months=5)
 sims = x.aggregate_ticker_simulations()
