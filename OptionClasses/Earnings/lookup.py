@@ -1,6 +1,6 @@
 import requests
 import pandas as pd
-from UseFunctions.date_time import two_date_period, previous_day, get_date_next_friday
+from UseFunctions.date_time import two_date_period, previous_day, get_date_next_friday, next_third_friday
 from StockClasses.single_stock import SingleStock
 from OptionClasses.Contracts.contract_spread import ContractSpread
 from OptionClasses.Strategies.straddle import StraddleStrategy
@@ -58,6 +58,7 @@ class StrategyTestInputs:
         self.per_contract_commission = per_contract_commission
         self.polygon_api_key = polygon_api_key
         self.errors_list = []
+        self.tested_tickers = []
         self.search_criteria = self._get_search_criteria()
         self.inputs_list = self._get_inputs_list()
 
@@ -76,7 +77,7 @@ class StrategyTestInputs:
             else:
                 errors_list.append({'ticker': ticker, 'error': 'Earnings Calendar Search'})
 
-        self.errors_list = errors_list
+        self.errors_list.extend(errors_list)
 
         return search_criteria
 
@@ -115,14 +116,31 @@ class StrategyTestInputs:
                 }
 
                 inputs_list.append(entry)
+
+            except ValueError:
+                try:
+                    strike = ContractSpread(
+                        underlying, current_underlying=average_entry_underlying,
+                        expiration_date_gte=next_third_friday(trade_date),
+                        date_as_of=trade_date).get_best_matched_contracts()[0]['strike_price']
+                except ValueError:
+                    errors_list.append({'ticker': underlying, 'error': 'ValueError Spread'})
+                    continue
+
+                entry = {
+                    'ticker': underlying,
+                    'strike': strike,
+                    'expiration_date': expiration_date,
+                    'entry_date': trade_date,
+                    'exit_date': trade_date,
+                }
+
+                inputs_list.append(entry)
             except TypeError:
                 errors_list.append({'ticker': underlying, 'error': 'TypeError Spread'})
                 continue
             except KeyError:
                 errors_list.append({'ticker': underlying, 'error': 'KeyError Spread'})
-                continue
-            except ValueError:
-                errors_list.append({'ticker': underlying, 'error': 'ValueError Spread'})
                 continue
 
         self.errors_list.extend(errors_list)
@@ -132,6 +150,7 @@ class StrategyTestInputs:
     def aggregate_ticker_simulations(self) -> (pd.DataFrame, list[dict]):
         all_simulations = []  # List to store all simulation DataFrames`
         errors_list = []
+        tested_tickers = []
         for input_company in self.inputs_list:
             try:
                 sim_inputs = StraddleStrategy(ticker=input_company['ticker'],
@@ -152,9 +171,17 @@ class StrategyTestInputs:
 
                 if simulation is not None:  # Check if simulation is not None
                     all_simulations.append(simulation)  # Append each simulation DataFrame to the list
+                    tested_tickers.append({
+                        'ticker': input_company['ticker'],
+                        'trade_date': input_company['entry_date'],
+                        'strike': input_company['strike'],
+                        'expiration': input_company['expiration_date'],
+                    })
             except KeyError:
                 errors_list.append({'ticker': input_company['ticker'], 'error': 'KeyError Strategy'})
                 continue
+
+        self.tested_tickers.extend(tested_tickers)
 
         full_sims = pd.concat(all_simulations, ignore_index=True)  # Concatenate all simulation DataFrames
 
@@ -163,91 +190,4 @@ class StrategyTestInputs:
         return full_sims
 
 
-tickers = [
-    'aapl', 'msft', 'amzn', 'goog', 'fb',     # Big Tech
-    'brk', 'jpm', 'v', 'pg', 'ma',            # Finance and Consumer Goods
-    'jnj', 'hd', 'unh', 'intc', 'tsla',       # Healthcare and Automobile
-    'wmt', 'baba', 't', 'crm', 'ko',          # Retail and Communications
-    'cmcsa', 'dis', 'nflx', 'pep', 'abt',     # Media and Consumer Goods
-    'adbe', 'nke', 'mcd', 'hon', 'bud',       # Consumer Goods and Beverage
-    'tmus', 'axp', 'cost', 'vz', 'mrk',       # Telecom and Pharmaceuticals
-    'orcl', 'pfe', 'amgn', 'abbv', 'mdt',     # Technology and Healthcare
-    'dhr', 'now', 'acb', 'twtr', 'nclh',      # Healthcare and Social Media
-    'tsm', 'amd', 'cat', 'ba', 'sbux',        # Technology and Aerospace
-    'csco', 'fdx', 'ge', 'gm', 'hpe',         # Technology and Automotive
-    'ibm', 'low', 'lmt', 'mo', 'ups',         # Technology and Retail
-    'xom', 'snap', 'tsn', 'mt', 'cl',         # Energy and Consumer Goods
-    'k', 'gis', 'clx', 'bmy', 'gild',         # Consumer Goods and Pharmaceuticals
-    'tgt', 'wba', 'mnst', 'kmb', 'tjx',       # Retail and Consumer Goods
-    'pm', 'mdlz', 'avgo', 'txn', 'mu',        # Technology and Semiconductors
-    'nflx', 'nke', 'ko', 'pep', 'bud',        # Beverage and Consumer Goods
-    'mo', 'cl', 'k', 'pg', 'pg', 'ko',        # Consumer Goods and Beverage
-    'pep', 'mo', 'bmy', 'gild', 'abt',        # Pharmaceuticals and Healthcare
-    'dhr', 'tgt', 'wba', 'mnst', 'kmb',       # Retail and Consumer Goods
-    'cost', 'tjx', 'pm', 'mdlz', 'cl',        # Consumer Goods
-    'k', 'avgo', 'txn', 'mu',                 # Semiconductors and Technology
-    'msft', 'amzn', 'goog', 'fb', 'brk',      # Big Tech and Finance
-    'jpm', 'v', 'pg', 'ma', 'jnj',            # Finance and Healthcare
-    'hd', 'unh', 'intc', 'tsla', 'wmt',       # Retail and Automobile
-    'baba', 't', 'crm', 'ko', 'cmcsa',        # Retail and Communications
-    'dis', 'pep', 'abt', 'adbe', 'nke',       # Consumer Goods and Media
-    'mcd', 'hon', 'bud', 'tmus', 'axp',       # Consumer Goods and Telecom
-    'cost', 'vz', 'mrk', 'orcl', 'pfe',       # Pharmaceuticals and Technology
-    'amgn', 'abbv', 'mdt', 'dhr', 'now',      # Healthcare and Technology
-    'crm', 'acb', 'twtr', 'nclh', 'tsm',      # Social Media and Technology
-    'amd', 'cat', 'ba', 'sbux', 'csco',       # Technology and Retail
-    'fdx', 'ge', 'gm', 'hpe', 'ibm',          # Technology and Automotive
-    'low', 'lmt', 'mo', 'ups', 'xom',         # Energy and Retail
-    'snap', 'tsn', 'mt', 'cl', 'k',           # Consumer Goods and Beverage
-    'gis', 'clx', 'pg', 'pg', 'ko',           # Consumer Goods and Beverage
-    'pep', 'mo', 'bmy', 'gild', 'abt',        # Pharmaceuticals and Healthcare
-    'dhr', 'tgt', 'wba', 'mnst', 'kmb',       # Retail and Consumer Goods
-    'cost', 'tjx', 'pm', 'mdlz', 'cl',        # Consumer Goods
-    'k', 'avgo', 'txn', 'mu'                  # Semiconductors and Technology
-]
-
-tickers2 = [
-    'AAPL', 'MSFT', 'AMZN', 'GOOGL', 'GOOG', 'FB', 'TSLA', 'BRK.B', 'NVDA', 'JPM',
-    'JNJ', 'V', 'PYPL', 'HD', 'MA', 'DIS', 'ADBE', 'BAC', 'CRM', 'XOM',
-    'INTC', 'CMCSA', 'VZ', 'NFLX', 'PEP', 'ABT', 'T', 'KO', 'CSCO', 'NKE',
-    'MRK', 'PFE', 'WMT', 'ABBV', 'TMO', 'CVX', 'UNH', 'MDT', 'ORCL', 'ACN',
-    'AMGN', 'IBM', 'HON', 'TXN', 'UPS', 'LMT', 'DHR', 'NEE', 'AVGO',
-    'PM', 'QCOM', 'LOW', 'SBUX', 'LIN', 'PYPL', 'RTX', 'MMM', 'COST', 'GS',
-    'BDX', 'CAT', 'AMD', 'BLK', 'BA', 'GE', 'CHTR', 'INTU', 'MS', 'BMY',
-    'SPGI', 'TFC', 'ISRG', 'VRTX', 'FIS', 'NOW', 'CVS', 'ANTM', 'TMUS',
-    'CCI', 'ZTS', 'CI', 'AMAT', 'AXP', 'MU', 'TJX', 'SYK', 'ADI', 'CSX',
-    'LRCX', 'AON', 'PLD', 'NSC', 'USB', 'TGT', 'D', 'ICE', 'SO', 'MET',
-    'EQIX', 'DE', 'CL', 'TMO', 'TMO', 'DOW', 'BKNG', 'MDLZ', 'WM', 'VRTX',
-    'ZM', 'APD', 'AEP', 'SCHW', 'DUK', 'ILMN', 'SO', 'EMR', 'COF', 'GD',
-    'PSX', 'FDX', 'CB', 'ECL', 'GM', 'CME', 'COP', 'KMB', 'ADP', 'ETN',
-    'WBA', 'A', 'REGN', 'MCD', 'ROP', 'BDX', 'EOG', 'BIIB', 'ROP', 'KLAC',
-    'CCI', 'CI', 'WELL', 'SRE', 'PEG', 'SHW', 'LHX', 'FISV', 'NOC', 'CCI',
-    'ED', 'ITW', 'ROST', 'GLW', 'KMI', 'TRV', 'HUM', 'ALGN', 'DTE', 'AIG',
-    'MMC', 'MMC', 'SYY', 'PGR', 'WEC', 'ALL', 'AFL', 'KLAC', 'APH', 'MET',
-    'EL', 'SYF', 'DFS', 'XLNX', 'IDXX', 'PSA', 'IT', 'KLAC', 'PPL', 'APH',
-    'KHC', 'SJM', 'AWK', 'TEL', 'PCAR', 'HCA', 'RMD', 'STZ', 'EXC', 'VLO',
-    'GL', 'CNC', 'MNST', 'ABC', 'ESS', 'CDW', 'MXIM', 'LNT', 'FAST', 'ULTA',
-    'CTXS', 'PXD', 'DLR', 'ALB', 'DG', 'IQV', 'YUM', 'RE', 'CHD', 'AVB',
-    'WLTW', 'VRSK', 'FRC', 'FTV', 'INFO', 'ETR', 'ODFL', 'MSI', 'MKC',
-    'AWK', 'VFC', 'HIG', 'AMCR', 'FRT', 'VTRS', 'VMC', 'CBRE', 'NDAQ',
-    'DGX', 'HPE', 'TT', 'ETSY', 'ORLY', 'CINF', 'RSG', 'WST', 'OKE', 'BKR',
-    'TSCO', 'EFX', 'AMP', 'CTLT', 'CMS', 'IFF', 'ANSS', 'JBHT', 'BR', 'GPC',
-    'LKQ', 'KEYS', 'ALXN', 'LUV', 'GRMN', 'AES', 'WY', 'EXPD', 'TTWO', 'TXT',
-    'TRMB', 'FLT', 'URI', 'KEY', 'TDG', 'AVY', 'MTB', 'FANG', 'VAR', 'AEE',
-    'NCLH', 'FMC', 'PWR', 'BXP', 'TDY', 'BIO', 'EXR', 'PKI', 'ARNC', 'LDOS',
-    'WDC', 'ANET', 'HPE', 'PFG', 'BKR', 'PKG', 'SLG', 'KSU', 'IP', 'NTRS',
-    'EXPE', 'FTNT', 'WRB', 'HES', 'JBHT', 'NUE', 'LH', 'PAYX', 'EVRG',
-    'GLNG', 'FTI', 'FE', 'DRI', 'RCL', 'MGM', 'NVR', 'JBHT', 'AOS', 'ALK',
-    'DISCK', 'DISCA', 'POOL', 'IFF', 'LW', 'HII', 'J', 'LEG', 'WRK', 'CINF',
-    'F', 'VIAC', 'NVR', 'VIAC', 'SEE', 'UA', 'IPG', 'WRK', 'FLS', 'ALK',
-    'HII', 'CF', 'DISCK', 'BEN', 'APA', 'DISCA', 'PWR', 'TAP', 'FLIR', 'CNP',
-    'KMX', 'LEG', 'BWA', 'NVR', 'FTI', 'IPGP', 'JWN', 'NLSN', 'ROL', 'PNR',
-    'HRB', 'NOV', 'XRX', 'DISCK', 'XRAY', 'ROL', 'UAA', 'XRX', 'SEE', 'EXPD',
-    'TXT', 'NVR', 'WRB', 'NCLH', 'CARR', 'PVH', 'J', 'UA', 'DXC', 'FLS',
-    'CF', 'NVR', 'DISCA', 'UA', 'BWA', 'HRB', 'FLS', 'PKG', 'NVR', 'VIAC',
-    'BEN']
-
-x = StrategyTestInputs(tickers, entry_exit_period=('10:30:00', '11:30:00', '15:30:00', '16:00:00'), lookup_period_months=5)
-sims = x.aggregate_ticker_simulations()
-errors = x.errors_list
 
