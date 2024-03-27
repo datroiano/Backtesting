@@ -61,9 +61,11 @@ def readable_time_to_seconds_since_midnight(readable_time):
     return total_seconds
 
 
-def two_date_period(months_since_yesterday: int) -> tuple:
-    today = datetime.now()
-    yesterday = today - timedelta(days=1)
+def two_date_period(months_since_yesterday: int, date_from: str = None) -> tuple:
+    if date_from is None or date_from == datetime.now():
+        yesterday = datetime.now() - timedelta(days=1)
+    else:
+        yesterday = datetime.strptime(date_from, '%Y-%m-%d')
     target_date = yesterday - timedelta(days=months_since_yesterday * 30)
     yesterday_str = yesterday.strftime('%Y-%m-%d')
     target_date_str = target_date.strftime('%Y-%m-%d')

@@ -87,17 +87,6 @@ sim_tickers_2 = [
 
 sim_tickers_2 = remove_repeated_strings(sim_tickers_2)
 
-sim_tickers_3 = [
-    'aapl', 'msft', 'amzn', 'goog', 'fb',     # Big Tech
-    'brk', 'jpm', 'v', 'pg', 'ma',            # Finance and Consumer Goods
-    'jnj', 'hd', 'unh', 'intc', 'tsla',       # Healthcare and Automobile
-    'wmt', 'baba', 't', 'crm', 'ko',          # Retail and Communications
-    'cmcsa', 'dis', 'nflx', 'pep', 'abt',     # Media and Consumer Goods
-    'adbe', 'nke', 'mcd', 'hon', 'bud',       # Consumer Goods and Beverage
-    'tmus', 'axp', 'cost', 'vz', 'mrk',       # Telecom and Pharmaceuticals
-    'orcl', 'pfe', 'amgn', 'abbv', 'mdt',     # Technology and Healthcare
-    'dhr', 'now', 'acb', 'twtr', 'nclh',      # Healthcare and Social Media
-    'tsm', 'amd', 'cat', 'ba', 'sbux',        # Technology and Aerospace
-]
+sim_tickers_3 = ['aapl', 'msft']
 
 sim_tickers_3 = remove_repeated_strings(sim_tickers_3)
