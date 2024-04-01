@@ -87,6 +87,6 @@ sim_tickers_2 = [
 
 sim_tickers_2 = remove_repeated_strings(sim_tickers_2)
 
-sim_tickers_3 = ['aapl', 'msft']
+sim_tickers_3 = ['aapl','plugin']
 
 sim_tickers_3 = remove_repeated_strings(sim_tickers_3)
