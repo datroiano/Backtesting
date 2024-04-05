@@ -7,7 +7,7 @@ used_sim = sim_tickers_3
 current_date = datetime.now()
 formatted_date = current_date.strftime('%Y-%m-%d')
 
-reference_date = '2023-05-01'
+reference_date = formatted_date
 
 x = StrategyTestInputs(used_sim,
                        entry_exit_period=('10:30:00', '11:30:00', '15:30:00', '16:00:00'),
