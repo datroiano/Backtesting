@@ -2,12 +2,12 @@ from OptionClasses.Earnings.company_tickers import sim_tickers_1, sim_tickers_2,
 from OptionClasses.Earnings.lookup import StrategyTestInputs
 from datetime import datetime
 
-used_sim = sim_tickers_3
+used_sim = sim_tickers_2
 
 current_date = datetime.now()
 formatted_date = current_date.strftime('%Y-%m-%d')
 
-reference_date = '2023-05-01'
+reference_date = '2024-06-12'
 
 x = StrategyTestInputs(used_sim,
                        entry_exit_period=('10:30:00', '11:30:00', '15:30:00', '16:00:00'),

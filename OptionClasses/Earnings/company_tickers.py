@@ -87,6 +87,8 @@ sim_tickers_2 = [
 
 sim_tickers_2 = remove_repeated_strings(sim_tickers_2)
 
-sim_tickers_3 = ['aapl','plugin']
+sim_tickers_3 = ['AAPL', 'MSFT', 'AMZN', 'GOOGL', 'GOOG', 'FB', 'TSLA', 'BRK.B', 'NVDA', 'JPM',
+    'JNJ', 'V', 'PYPL', 'HD', 'MA', 'DIS', 'ADBE', 'BAC', 'CRM', 'XOM',
+    'INTC', 'CMCSA', 'VZ']    # Media and Consumer Goods
 
 sim_tickers_3 = remove_repeated_strings(sim_tickers_3)

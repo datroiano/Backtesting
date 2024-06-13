@@ -46,7 +46,7 @@ class EarningsLookup:
 
 class StrategyTestInputs:
     def __init__(self, tickers, entry_exit_period: tuple, lookup_period_months=3, report_time='any',
-                 test_quantity: int = 1, per_contract_commission: float = 0.01, lookup_from: str = '',
+                 test_quantity: int = 1, per_contract_commission: float = 0.00, lookup_from: str = '',
                  polygon_api_key='r1Jqp6JzYYhbt9ak10x9zOpoj1bf58Zz'):
         self.tickers = tickers
         self.lookup_period_months = lookup_period_months
